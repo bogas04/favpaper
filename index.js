@@ -3,16 +3,22 @@
 
 const fetch = require('node-fetch');
 const wallpaper = require('wallpaper');
+const fs = require('fs');
+const path = `${require('home-dir')()}/.favpaper/`;
 
 const sub = process.argv[2] || 'spaceporn';
 const source = sub => `http://reddit.com/r/${sub}.json`;
 
 const saveWallpaper = image => {
-  const fileName = `wallpaper-${Date.now()}.png`;
-  image.body.pipe(require('fs').createWriteStream(fileName)).on('close', () => {
-    console.log('image downloaded');
-    wallpaper.set(fileName).then(() => console.log(" wallpaper has been set"))
-  })
+  const filename = `wallpaper-${Date.now()}.png`;
+
+  fs.stat(path, (err, status) => {
+    if (err && err.code === 'ENOENT') { fs.mkdirSync(path); }
+    image.body.pipe(fs.createWriteStream(path + filename)).on('close', () => {
+      console.log('image downloaded');
+      wallpaper.set(path + filename).then(() => console.log(" wallpaper has been set"))
+    })
+  });
 };
 
 fetch(source(sub)).then(r => r.json()).then(body => {
